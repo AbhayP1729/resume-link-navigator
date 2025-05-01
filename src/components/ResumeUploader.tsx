@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Upload } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResumeUploaderProps {
   onParseSuccess: (data: {
@@ -107,15 +107,15 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   };
 
   return (
-    <Card className="p-6 w-full max-w-md mx-auto">
+    <Card className="p-6 w-full max-w-md mx-auto bg-secondary/30 border-zinc-800">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-medium">Upload Your Resume</h3>
-        <p className="text-sm text-muted-foreground">PDF or DOCX format only</p>
+        <h3 className="text-lg font-medium text-gray-200">Upload Your Resume</h3>
+        <p className="text-sm text-gray-400">PDF or DOCX format only</p>
       </div>
       
       <div 
         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer mb-4 transition-colors
-          ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}`}
+          ${dragActive ? 'border-blue-500 bg-blue-900/20' : 'border-gray-700 hover:border-gray-500'}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -123,7 +123,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       >
         <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
           <Upload className="h-10 w-10 text-gray-400 mb-2" />
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-gray-300">
             {file ? file.name : 'Drag & drop your resume or click to browse'}
           </span>
           <input 
@@ -138,7 +138,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       
       <Button 
         onClick={uploadResume} 
-        className="w-full" 
+        className="w-full bg-blue-600 hover:bg-blue-700" 
         disabled={!file || isLoading}
       >
         {isLoading ? (
