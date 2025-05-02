@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ResumeUploaderProps {
@@ -98,7 +98,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       console.error('Upload failed:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error processing your resume",
+        description: "There was an error processing your resume. Make sure the backend server is running.",
         variant: "destructive"
       });
     } finally {
@@ -107,24 +107,34 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   };
 
   return (
-    <Card className="p-6 w-full max-w-md mx-auto bg-secondary/30 border-zinc-800">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-medium text-gray-200">Upload Your Resume</h3>
+    <Card className="p-6 w-full max-w-md mx-auto bg-gradient-to-br from-zinc-900 to-black/60 border border-zinc-800/50 shadow-lg">
+      <div className="text-center mb-5 animate-fade-in">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/20 mb-4 backdrop-blur-sm">
+          <FileText className="h-6 w-6 text-blue-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-1">Upload Your Resume</h3>
         <p className="text-sm text-gray-400">PDF or DOCX format only</p>
       </div>
       
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer mb-4 transition-colors
-          ${dragActive ? 'border-blue-500 bg-blue-900/20' : 'border-gray-700 hover:border-gray-500'}`}
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer mb-5 transition-all duration-300 animate-fade-in
+          ${dragActive 
+            ? 'border-blue-500 bg-blue-900/20 scale-[1.01]' 
+            : 'border-zinc-700 hover:border-zinc-500 hover:bg-blue-900/10'
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
+        style={{ animationDelay: "0.2s" }}
       >
         <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
-          <Upload className="h-10 w-10 text-gray-400 mb-2" />
-          <span className="text-sm font-medium text-gray-300">
-            {file ? file.name : 'Drag & drop your resume or click to browse'}
+          <Upload className={`h-12 w-12 mb-3 transition-colors duration-300 ${file ? 'text-blue-400' : 'text-zinc-500'}`} />
+          <span className="text-sm font-medium text-gray-300 mb-1">
+            {file ? file.name : 'Drag & drop your resume here'}
+          </span>
+          <span className="text-xs text-gray-500">
+            {file ? 'File selected' : 'or click to browse'}
           </span>
           <input 
             id="file-upload" 
@@ -138,13 +148,14 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       
       <Button 
         onClick={uploadResume} 
-        className="w-full bg-blue-600 hover:bg-blue-700" 
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2.5 shadow-lg shadow-blue-900/20 animate-fade-in" 
         disabled={!file || isLoading}
+        style={{ animationDelay: "0.3s" }}
       >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing
+            Processing Resume...
           </>
         ) : "Analyze Resume"}
       </Button>

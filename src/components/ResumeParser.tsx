@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import ResumeUploader from './ResumeUploader';
 import JobMatchResults from './JobMatchResults';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface ParsedData {
   skills: string[];
@@ -18,7 +20,7 @@ const ResumeParser: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto">
       {!parsedData && (
         <ResumeUploader 
           onParseSuccess={handleParseSuccess} 
@@ -28,19 +30,21 @@ const ResumeParser: React.FC = () => {
       )}
       
       {parsedData && (
-        <>
+        <div className="space-y-4">
           <JobMatchResults 
             skills={parsedData.skills}
             role={parsedData.role}
             location={parsedData.location}
           />
-          <button 
-            onClick={() => setParsedData(null)} 
-            className="text-sm text-blue-500 hover:text-blue-700 mx-auto block"
+          <Button 
+            variant="ghost" 
+            className="text-sm text-blue-400 hover:text-blue-300 mx-auto flex items-center transition-all"
+            onClick={() => setParsedData(null)}
           >
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Upload a different resume
-          </button>
-        </>
+          </Button>
+        </div>
       )}
     </div>
   );
