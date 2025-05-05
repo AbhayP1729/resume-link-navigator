@@ -1,16 +1,32 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Upload, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
+interface Interest {
+  skill: string;
+  score: number;
+}
+
+interface GrowthPotential {
+  score: number;
+  indicators: string[];
+}
+
+interface ParsedData {
+  skills: string[];
+  role: string;
+  location: string;
+  experience_years: number | null;
+  education: string[];
+  interests: Interest[];
+  growth_potential: GrowthPotential;
+  resume_suggestions: string[];
+}
+
 interface ResumeUploaderProps {
-  onParseSuccess: (data: {
-    skills: string[];
-    role: string;
-    location: string;
-  }) => void;
+  onParseSuccess: (data: ParsedData) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 }
@@ -91,8 +107,8 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       const data = await response.json();
       onParseSuccess(data);
       toast({
-        title: "Resume parsed successfully",
-        description: "Check out your LinkedIn job matches!",
+        title: "Resume analyzed successfully",
+        description: "Check out your detailed profile and suggestions!",
       });
     } catch (error) {
       console.error('Upload failed:', error);
@@ -113,7 +129,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
           <FileText className="h-6 w-6 text-blue-400" />
         </div>
         <h3 className="text-xl font-semibold text-white mb-1">Upload Your Resume</h3>
-        <p className="text-sm text-gray-400">PDF or DOCX format only</p>
+        <p className="text-sm text-gray-400">Get intelligent insights & suggestions</p>
       </div>
       
       <div 
@@ -155,9 +171,9 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing Resume...
+            Analyzing Resume...
           </>
-        ) : "Analyze Resume"}
+        ) : "Analyze & Get Insights"}
       </Button>
     </Card>
   );

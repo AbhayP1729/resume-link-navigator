@@ -5,10 +5,25 @@ import JobMatchResults from './JobMatchResults';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
+interface Interest {
+  skill: string;
+  score: number;
+}
+
+interface GrowthPotential {
+  score: number;
+  indicators: string[];
+}
+
 interface ParsedData {
   skills: string[];
   role: string;
   location: string;
+  experience_years: number | null;
+  education: string[];
+  interests: Interest[];
+  growth_potential: GrowthPotential;
+  resume_suggestions: string[];
 }
 
 const ResumeParser: React.FC = () => {
@@ -35,6 +50,11 @@ const ResumeParser: React.FC = () => {
             skills={parsedData.skills}
             role={parsedData.role}
             location={parsedData.location}
+            experienceYears={parsedData.experience_years}
+            education={parsedData.education}
+            interests={parsedData.interests}
+            growthPotential={parsedData.growth_potential}
+            resumeSuggestions={parsedData.resume_suggestions}
           />
           <Button 
             variant="ghost" 
