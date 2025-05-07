@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -93,6 +92,7 @@ interface JobMatchResultsProps {
   resumeSuggestions: ResumeSuggestion[];
   atsScore: ATSScoring;
   jobMatch?: JobMatch;
+  rawResumeText?: string | null;
 }
 
 const JobMatchResults: React.FC<JobMatchResultsProps> = ({ 
@@ -109,7 +109,8 @@ const JobMatchResults: React.FC<JobMatchResultsProps> = ({
   writingQuality,
   resumeSuggestions,
   atsScore,
-  jobMatch
+  jobMatch,
+  rawResumeText
 }) => {
   const generateLinkedInUrl = () => {
     const baseUrl = "https://www.linkedin.com/jobs/search/?";
