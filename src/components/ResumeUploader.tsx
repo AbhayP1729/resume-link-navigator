@@ -90,12 +90,14 @@ interface ParsedData {
 
 interface ResumeUploaderProps {
   onParseSuccess: (data: ParsedData) => void;
+  onExtractRawText?: (text: string) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 }
 
 const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   onParseSuccess,
+  onExtractRawText,
   isLoading,
   setIsLoading
 }) => {
@@ -160,6 +162,22 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       const formData = new FormData();
       formData.append('file', file);
 
+      // Extract raw text from file for potential job matching
+      if (onExtractRawText) {
+        try {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const text = e.target?.result as string;
+            if (text) {
+              onExtractRawText(text);
+            }
+          };
+          reader.readAsText(file);
+        } catch (error) {
+          console.log("Could not extract text from file");
+        }
+      }
+
       // If job description is provided, we'll analyze it against the resume
       let endpoint = jobDescription 
         ? 'http://localhost:5000/api/analyze-job-match'
@@ -220,11 +238,16 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
         response = await response.json();
       }
 
-      onParseSuccess(response);
-      toast({
-        title: "Resume analyzed successfully",
-        description: "Check out your detailed profile and suggestions!",
-      });
+      // Validate the response before passing it to parent
+      if (response && typeof response === 'object') {
+        onParseSuccess(response);
+        toast({
+          title: "Resume analyzed successfully",
+          description: "Check out your insights based on your actual resume data!",
+        });
+      } else {
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
       console.error('Upload failed:', error);
       toast({
@@ -244,7 +267,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
           <FileText className="h-6 w-6 text-blue-400" />
         </div>
         <h3 className="text-xl font-semibold text-white mb-1">ATS Resume Analyzer</h3>
-        <p className="text-sm text-gray-400">Get intelligent insights & suggestions</p>
+        <p className="text-sm text-gray-400">Get intelligent insights based on your actual resume data</p>
       </div>
       
       <Tabs 
@@ -343,9 +366,9 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing Resume...
+            Analyzing Your Resume...
           </>
-        ) : "Analyze & Get ATS Insights"}
+        ) : "Analyze & Get Precise ATS Insights"}
       </Button>
     </Card>
   );
