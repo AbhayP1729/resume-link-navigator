@@ -1,10 +1,9 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Upload, FileText, ArrowDown, FileCode } from 'lucide-react';
+import { Loader2, Upload, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
 interface Interest {
   skill: string;
@@ -37,13 +36,6 @@ interface ProjectItem {
   title: string;
   description: string;
   complexity_score: number;
-}
-
-interface SkillsData {
-  technical: string[];
-  soft: string[];
-  outdated: string[];
-  balance_score: number;
 }
 
 interface WritingQuality {
@@ -103,8 +95,6 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [jobDescription, setJobDescription] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>('upload');
   const { toast } = useToast();
 
   const handleDrag = (e: React.DragEvent) => {
@@ -162,7 +152,7 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
       const formData = new FormData();
       formData.append('file', file);
 
-      // Extract raw text from file for potential job matching
+      // Extract raw text from file for potential analysis
       if (onExtractRawText) {
         try {
           const reader = new FileReader();
@@ -177,73 +167,25 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
           console.log("Could not extract text from file");
         }
       }
-
-      // If job description is provided, we'll analyze it against the resume
-      let endpoint = jobDescription 
-        ? 'http://localhost:5000/api/analyze-job-match'
-        : 'http://localhost:5000/api/parse-resume';
         
-      let response;
+      // Parse the resume
+      const response = await fetch('http://localhost:5000/api/parse-resume', {
+        method: 'POST',
+        body: formData,
+      });
       
-      if (jobDescription) {
-        // First parse the resume normally
-        const resumeResponse = await fetch('http://localhost:5000/api/parse-resume', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (!resumeResponse.ok) {
-          throw new Error('Server responded with an error when parsing resume');
-        }
-        
-        const resumeData = await resumeResponse.json();
-        
-        // Then get text from file to send with job description
-        const text = await file.text();
-        
-        // Now analyze job match
-        const jobMatchResponse = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            resume_text: text,
-            job_description: jobDescription
-          }),
-        });
-        
-        if (!jobMatchResponse.ok) {
-          throw new Error('Server responded with an error when analyzing job match');
-        }
-        
-        const jobMatchData = await jobMatchResponse.json();
-        
-        // Combine the data
-        response = {
-          ...resumeData,
-          job_match: jobMatchData
-        };
-      } else {
-        // Just parse the resume normally
-        response = await fetch('http://localhost:5000/api/parse-resume', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (!response.ok) {
-          throw new Error('Server responded with an error');
-        }
-        
-        response = await response.json();
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
       }
+      
+      const parsedData = await response.json();
 
       // Validate the response before passing it to parent
-      if (response && typeof response === 'object') {
-        onParseSuccess(response);
+      if (parsedData && typeof parsedData === 'object') {
+        onParseSuccess(parsedData);
         toast({
           title: "Resume analyzed successfully",
-          description: "Check out your insights based on your actual resume data!",
+          description: "Check out your insights based on your resume",
         });
       } else {
         throw new Error('Invalid response format from server');
@@ -266,96 +208,39 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/20 mb-4 backdrop-blur-sm">
           <FileText className="h-6 w-6 text-blue-400" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-1">ATS Resume Analyzer</h3>
-        <p className="text-sm text-gray-400">Get intelligent insights based on your actual resume data</p>
+        <h3 className="text-xl font-semibold text-white mb-1">Professional Resume Analyzer</h3>
+        <p className="text-sm text-gray-400">Get intelligent insights to improve your resume and application success</p>
       </div>
       
-      <Tabs 
-        defaultValue="upload" 
-        value={activeTab} 
-        onValueChange={setActiveTab}
-        className="w-full mb-4"
+      <div 
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer mb-5 transition-all duration-300 animate-fade-in
+          ${dragActive 
+            ? 'border-blue-500 bg-blue-900/20 scale-[1.01]' 
+            : 'border-zinc-700 hover:border-zinc-500 hover:bg-blue-900/10'
+          }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        style={{ animationDelay: "0.2s" }}
       >
-        <TabsList className="grid w-full grid-cols-2 mb-5">
-          <TabsTrigger value="upload">Upload Resume</TabsTrigger>
-          <TabsTrigger value="job-desc">Job Description</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="upload">
-          <div 
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer mb-5 transition-all duration-300 animate-fade-in
-              ${dragActive 
-                ? 'border-blue-500 bg-blue-900/20 scale-[1.01]' 
-                : 'border-zinc-700 hover:border-zinc-500 hover:bg-blue-900/10'
-              }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            style={{ animationDelay: "0.2s" }}
-          >
-            <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
-              <Upload className={`h-12 w-12 mb-3 transition-colors duration-300 ${file ? 'text-blue-400' : 'text-zinc-500'}`} />
-              <span className="text-sm font-medium text-gray-300 mb-1">
-                {file ? file.name : 'Drag & drop your resume here'}
-              </span>
-              <span className="text-xs text-gray-500">
-                {file ? 'File selected' : 'or click to browse'}
-              </span>
-              <input 
-                id="file-upload" 
-                type="file" 
-                accept=".pdf,.docx"
-                className="hidden" 
-                onChange={handleChange}
-              />
-            </label>
-          </div>
-          
-          <div className="text-center text-xs text-blue-300 mb-5 flex justify-center items-center">
-            <ArrowDown className="h-4 w-4 mr-2" />
-            <span>Optionally add a job description to compare match</span>
-          </div>
-          
-          <Button 
-            variant="secondary"
-            className="w-full text-sm mb-4"
-            onClick={() => setActiveTab('job-desc')}
-          >
-            <FileCode className="mr-2 h-4 w-4" />
-            Add Job Description
-          </Button>
-        </TabsContent>
-        
-        <TabsContent value="job-desc">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="job-description" className="text-sm font-medium text-white block">
-                Paste Job Description (Optional)
-              </label>
-              <Textarea 
-                id="job-description" 
-                placeholder="Paste job description here to analyze its match with your resume..." 
-                className="min-h-[200px] bg-zinc-800/50 border-zinc-700"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-              />
-              <p className="text-xs text-zinc-400">
-                This allows us to analyze your resume's compatibility with specific job requirements.
-              </p>
-            </div>
-            
-            <Button 
-              variant="secondary"
-              className="w-full text-sm mb-4"
-              onClick={() => setActiveTab('upload')}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              Back to Resume Upload
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+        <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
+          <Upload className={`h-12 w-12 mb-3 transition-colors duration-300 ${file ? 'text-blue-400' : 'text-zinc-500'}`} />
+          <span className="text-sm font-medium text-gray-300 mb-1">
+            {file ? file.name : 'Drag & drop your resume here'}
+          </span>
+          <span className="text-xs text-gray-500">
+            {file ? `${Math.round(file.size / 1024)} KB` : 'Upload PDF or DOCX file'}
+          </span>
+          <input 
+            id="file-upload" 
+            type="file" 
+            accept=".pdf,.docx"
+            className="hidden" 
+            onChange={handleChange}
+          />
+        </label>
+      </div>
       
       <Button 
         onClick={uploadResume} 
@@ -368,8 +253,13 @@ const ResumeUploader: React.FC<ResumeUploaderProps> = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Analyzing Your Resume...
           </>
-        ) : "Analyze & Get Precise ATS Insights"}
+        ) : "Analyze & Get Professional Insights"}
       </Button>
+      
+      <p className="mt-4 text-xs text-center text-zinc-500">
+        Your resume is analyzed locally through our advanced NLP system.
+        No data is stored or shared with third parties.
+      </p>
     </Card>
   );
 };

@@ -38,13 +38,6 @@ interface ProjectItem {
   complexity_score: number;
 }
 
-interface SkillsData {
-  technical: string[];
-  soft: string[];
-  outdated: string[];
-  balance_score: number;
-}
-
 interface WritingQuality {
   score: number;
   weak_phrases_found: number;
@@ -98,14 +91,11 @@ const ResumeParser: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rawText, setRawText] = useState<string | null>(null);
 
-  // This function ensures we're only showing data that was properly extracted
+  // Improved data validation and cleaning function
   const handleParseSuccess = (data: ParsedData) => {
-    setParsedData(data);
-    
-    // Log the full data for debugging
     console.log("Parsed data:", data);
     
-    // Check for invalid or empty fields and clean them
+    // Enhanced data validation and cleaning
     const cleanedData = {
       ...data,
       contact_info: {
@@ -114,24 +104,59 @@ const ResumeParser: React.FC = () => {
         phone: data.contact_info.phone || null,
         linkedin: data.contact_info.linkedin || null
       },
-      skills: Array.isArray(data.skills) ? data.skills : [],
+      skills: Array.isArray(data.skills) ? 
+        // Filter out low-confidence skills and limit to most relevant ones
+        data.skills.filter(skill => skill && skill.trim() !== "") : [],
       role: data.role || "Not specified",
       location: data.location || "Not specified",
+      // Only include interests with meaningful scores
       interests: Array.isArray(data.interests) ? 
-        data.interests.filter(interest => interest.skill && interest.score >= 1) : [],
+        data.interests.filter(interest => 
+          interest.skill && 
+          interest.skill.trim() !== "" && 
+          interest.score >= 3
+        ) : [],
       growth_potential: {
         score: data.growth_potential?.score || 0,
         indicators: Array.isArray(data.growth_potential?.indicators) ? 
-          data.growth_potential.indicators : []
+          data.growth_potential.indicators.filter(indicator => indicator.trim() !== "") : []
       },
+      // Only include meaningful suggestions
       resume_suggestions: Array.isArray(data.resume_suggestions) ?
-        data.resume_suggestions.filter(suggestion => suggestion.text.trim() !== "") : []
+        data.resume_suggestions
+          .filter(suggestion => 
+            suggestion.text.trim() !== "" && 
+            suggestion.severity !== 'low'
+          )
+          .slice(0, 3) : [] // Limit to top 3 most important suggestions
     };
+    
+    // Validate education data
+    if (cleanedData.education && Array.isArray(cleanedData.education)) {
+      cleanedData.education = cleanedData.education
+        .filter(edu => edu.text && edu.text.trim() !== "")
+        .map(edu => ({
+          ...edu,
+          quality_score: typeof edu.quality_score === 'number' ? 
+            Math.min(10, Math.max(1, edu.quality_score)) : 5 // Normalize between 1-10
+        }));
+    }
+    
+    // Validate project data
+    if (cleanedData.projects && Array.isArray(cleanedData.projects)) {
+      cleanedData.projects = cleanedData.projects
+        .filter(proj => proj.title && proj.title.trim() !== "")
+        .map(proj => ({
+          ...proj,
+          complexity_score: typeof proj.complexity_score === 'number' ? 
+            Math.min(10, Math.max(1, proj.complexity_score)) : 5 // Normalize between 1-10
+        }));
+    }
     
     setParsedData(cleanedData);
   };
 
-  // Store raw text content for potential job matching
+  // Store raw text content for potential analysis
   const handleRawText = (text: string) => {
     setRawText(text);
   };
